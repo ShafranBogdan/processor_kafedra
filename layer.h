@@ -13,6 +13,7 @@ private:
 
 public:
     // Конструктор с параметрами по умолчанию (пустой слой)
+    Layer() = default;
     Layer(const std::string& name, const std::vector<Polygon>& polygons = {});
 
     // Возвращает имя слоя

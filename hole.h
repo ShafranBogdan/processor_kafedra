@@ -6,6 +6,8 @@
 #include <variant>
 #include "point.h"  // Предполагается, что этот файл определяет класс Point
 
+using VariantType = std::variant<int, double, std::string>;
+
 class Hole {
 private:
     std::vector<Point> vertices;  // Вектор вершин, определяющий форму дырки

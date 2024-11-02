@@ -28,9 +28,9 @@ int Processor::uniteLayers(const std::string& first_layer_name, const std::strin
             target_layer_pack.append_layer(result_layer);
             target_converter.saveToJson(target_file_name);
         }
-        return 0;  // Успех
+        return 0;
     } catch (...) {
-        return -1;  // Ошибка
+        return -1;
     }
 }
 
@@ -62,9 +62,9 @@ int Processor::intersectLayers(const std::string& first_layer_name, const std::s
             target_layer_pack.append_layer(result_layer);
             target_converter.saveToJson(target_file_name);
         }
-        return 0;  // Успех
+        return 0;
     } catch (...) {
-        return -1; // Ошибка
+        return -1;
     }
 }
 
@@ -96,9 +96,9 @@ int Processor::subtractLayers(const std::string& first_layer_name, const std::st
             target_layer_pack.append_layer(result_layer);
             target_converter.saveToJson(target_file_name);
         }
-        return 0;  // Успех
+        return 0;
     } catch (...) {
-        return -1; // Ошибка
+        return -1;
     }
 }
 
@@ -132,9 +132,9 @@ int Processor::expandLayer(const std::string& layer_name, const std::string& res
                 target_converter.saveToJson(target_file_name);
             }
         }
-        return 0;  // Успех
+        return 0;
     } catch (...) {
-        return -1; // Ошибка
+        return -1;
     }
 }
 
@@ -166,11 +166,11 @@ int Processor::renameLayer(const std::string& old_layer_name, const std::string&
         LayerPack& layer_pack = converter.getLayerPack();
 
         layer_pack = LayerOperations::renameLayerInLayerPack(old_layer_name, new_layer_name, layer_pack);
-        converter.saveToJson(layout_file_name); // Сохраняем в файл
+        converter.saveToJson(layout_file_name);
 
-        return 0; // Успех
+        return 0;
     } catch (...) {
-        return -1; // Ошибка
+        return -1;
     }
 }
 
@@ -182,19 +182,40 @@ int Processor::copyLayer(const std::string& layer_name, const std::string& copy_
         LayerPack& source_layer_pack = source_converter.getLayerPack();
 
         if (target_file_name == source_file_name) {
-            layer_pack = LayerOperations::copyLayerFromLayerPack(old_layer_name, new_layer_name, layer_pack);
-            source_layer_pack.append_layer(result_layer);
+            if (copy_layer_name == layer_name)
+            {
+                throw std::invalid_argument("Имя копируемого слоя совпадает с исходным именем при том одинаковых именах входного и выходного файла. Укажите другое имя для копии.");
+            }
+            source_layer_pack = LayerOperations::copyLayerFromLayerPack(source_layer_pack, layer_name, copy_layer_name);
             source_converter.saveToJson(target_file_name);
         }
         else {
             Converter target_converter;
             target_converter.convertJson(target_file_name);
             LayerPack& target_layer_pack = target_converter.getLayerPack();
-            target_layer_pack.append_layer(result_layer);
+            target_layer_pack = LayerOperations::copyLayerFromLayerPack(source_layer_pack, layer_name, copy_layer_name);
             target_converter.saveToJson(target_file_name);
         }
-        return 0; // Успех
+        return 0;
     } catch (...) {
-        return -1; // Ошибка
+        return -1;
+    }
+}
+
+int Processor::layerHaveFigure(const std::string& layer_name, const std::string& layout_file_name) {
+    try {
+        Converter converter;
+        converter.convertJson(layout_file_name);
+        LayerPack& layer_pack = converter.getLayerPack();
+
+        Layer& layer = layer_pack[layer_name];
+
+        if (LayerOperations::layerIsEmpty(layer)) {
+            return 1;
+        } else {
+            return 0;
+        }
+    } catch (...) {
+        return -1;
     }
 }

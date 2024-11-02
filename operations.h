@@ -37,6 +37,7 @@ namespace LayerOperations {
     bool layerIsEmpty(Layer& layer);
 
     // Копирование слоя с именем source_layer_name из одного LayerPack в другой LayerPack
+    LayerPack copyLayerFromLayerPack(LayerPack& layer_pack, const std::string& source_layer_name, const std::string& target_layer_name);
     LayerPack copyLayerFromLayerPack(const LayerPack& layer_pack1, const LayerPack& layer_pack2, const std::string& source_layer_name, const std::string& target_layer_name);
 }
 
