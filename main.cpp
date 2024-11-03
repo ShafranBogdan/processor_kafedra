@@ -37,7 +37,7 @@ void printUsage() {
 int main(int argc, char *argv[]) {
     if (argc < 4) {
         printUsage();
-        return 1;
+        return -1;
     }
 
     Processor processor;
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
         if (command == "unite" || command == "intersect" || command == "subtract") {
             if (argc < 8 || std::string(argv[5]) != "to") {
                 printUsage();
-                return 1;
+                return -1;
             }
             
             std::string layer1 = argv[2];
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
         } else if (command == "expand" || command == "shrink") {
             if (argc < 8 || std::string(argv[5]) != "to") {
                 printUsage();
-                return 1;
+                return -1;
             }
 
             std::string layer1 = argv[2];
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
         } else if (command == "del_layer") {
             if (argc != 4) {
                 printUsage();
-                return 1;
+                return -1;
             }
 
             std::string layer_name = argv[2];
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
         } else if (command == "rename_layer") {
             if (argc != 5) {
                 printUsage();
-                return 1;
+                return -1;
             }
 
             std::string old_layer_name = argv[2];
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
         } else if (command == "copy_layer") {
             if (argc < 7 || std::string(argv[5]) != "to") {
                 printUsage();
-                return 1;
+                return -1;
             }
 
             std::string layer1 = argv[2];
@@ -117,15 +117,18 @@ int main(int argc, char *argv[]) {
         } else if (command == "have_figure") {
             if (argc != 4) {
                 printUsage();
-                return 1;
+                return -1;
             }
 
             std::string layer_name = argv[2];
             int result = processor.layerHaveFigure(layer_name, source_file);
+            
+            if (result == -1) return -1;
+
             return result ? 1 : 0;
         } else {
             printUsage();
-            return 1;
+            return -1;
         }
     } catch (const std::exception &e) {
         std::cerr << "Error: " << e.what() << std::endl;
