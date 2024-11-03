@@ -191,7 +191,7 @@ int Processor::copyLayer(const std::string& layer_name, const std::string& copy_
         if (target_file_name == source_file_name) {
             if (copy_layer_name == layer_name)
             {
-                throw std::invalid_argument("Имя копируемого слоя совпадает с исходным именем при том одинаковых именах входного и выходного файла. Укажите другое имя для копии.");
+                throw std::invalid_argument("Имя копируемого слоя совпадает с исходным именем при одинаковых именах входного и выходного файла. Укажите другое имя для копии.");
             }
             source_layer_pack = LayerOperations::copyLayerFromLayerPack(source_layer_pack, layer_name, copy_layer_name);
             source_converter.saveToJson(target_file_name);
