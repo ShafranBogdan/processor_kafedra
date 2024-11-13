@@ -35,11 +35,11 @@ void printUsage() {
               << "  shrink:     ./processor source_file_name L1 shrink size to L2 [-o target_file_name]\n"
               << "              Shrinks all polygons in layer L1 by 'size', saves to L2.\n"
               << "              If target_file_name and L2 are omitted, results are saved in L1.\n\n"
-              << "  del_layer:  ./processor layout_file_name del_layer L1\n"
+              << "  del_layer:  ./processor layout_file_name L1 del_layer\n"
               << "              Deletes layer L1 from layout_file_name.\n\n"
-              << "  rename_layer: ./processor layout_file_name rename_layer old_layer_name new_layer_name\n"
+              << "  rename_layer: ./processor layout_file_name old_layer_name rename_layer new_layer_name\n"
               << "              Renames old_layer_name to new_layer_name in layout_file_name.\n\n"
-              << "  copy_layer: ./processor source_file_name copy_layer L1 to L2 [-o target_file_name]\n"
+              << "  copy_layer: ./processor source_file_name L1 copy_layer to L2 [-o target_file_name]\n"
               << "              Copies layer L1 to a new layer L2 in the target file.\n"
               << "              By default, saves in source_file_name if -o target_file_name is omitted.\n\n"
               << "  have_figure: ./processor source_file_name L1 have_figure\n"
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 
     try {
         if (command == "unite" || command == "intersect" || command == "subtract") {
-            if (std::string(argv[5]) != "to") {
+            if (argc < 7 || std::string(argv[5]) != "to") {
                 printUsage();
                 return -1;
             }
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
                 target_converter.saveToJson(target_file);
             }
         } else if (command == "expand" || command == "shrink") {
-            if (argc < 8 || std::string(argv[5]) != "to") {
+            if (argc < 7 || std::string(argv[5]) != "to") {
                 printUsage();
                 return -1;
             }
@@ -154,13 +154,13 @@ int main(int argc, char *argv[]) {
             }
             source_converter.saveToJson(source_file);
         } else if (command == "copy_layer") {
-            if (argc < 7 || std::string(argv[5]) != "to") {
+            if (argc < 6 || std::string(argv[4]) != "to") {
                 printUsage();
                 return -1;
             }
             std::string first_layer_name = argv[2];
-            std::string second_layer_name = argv[6];
-            if (argc == 9 && std::string(argv[7]) == "-o") {
+            std::string second_layer_name = argv[5];
+            if (argc == 8 && std::string(argv[6]) == "-o") {
                 target_file = argv[8];
             }
             if (target_file == source_file) {
@@ -187,7 +187,6 @@ int main(int argc, char *argv[]) {
                 throw std::runtime_error("Ошибка в операции проверки наличия фигур при работе с фалом " + source_file);
             }
             int ans = result ? 1 : 0;
-            std::cout << ans;
             return ans;
         } else {
             printUsage();
