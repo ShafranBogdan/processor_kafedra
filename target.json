@@ -1,0 +1,18 @@
+{
+    "layers": [
+        {
+            "name": "ResultLayer",
+            "level": "0",
+            "polygons": [
+                {
+                    "cords": [],
+                    "holes": []
+                },
+                {
+                    "cords": [],
+                    "holes": []
+                }
+            ]
+        }
+    ]
+}

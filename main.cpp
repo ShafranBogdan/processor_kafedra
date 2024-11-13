@@ -1,6 +1,19 @@
 #include <iostream>
 #include <string>
+
 #include "processor.h"
+
+OperationType getOperationTypeByComand(const std::string& command) {
+    if (command == "unite") {
+        return OperationType::UNION;
+    }
+    else if (command == "intersect") {
+        return OperationType::INTERSECTION;
+    }
+    else {
+        return OperationType::SUBTRACTION;
+    }
+}
 
 void printUsage() {
     std::cout << "Usage:\n"
@@ -41,30 +54,42 @@ int main(int argc, char *argv[]) {
     }
 
     Processor processor;
+    Converter source_converter;
+    Converter target_converter;
     std::string source_file = argv[1];
+    source_converter.loadJson(source_file);
+    LayerPack& source_layer_pack = source_converter.getLayerPack();
+
     std::string command = argv[3];
     std::string target_file = source_file;  // default target is source file
 
     try {
         if (command == "unite" || command == "intersect" || command == "subtract") {
-            if (argc < 8 || std::string(argv[5]) != "to") {
+            if (std::string(argv[5]) != "to") {
                 printUsage();
                 return -1;
             }
             
-            std::string layer1 = argv[2];
-            std::string layer2 = argv[4];
-            std::string result_layer = argv[6];
+            std::string first_layer_name = argv[2];
+            std::string second_layer_name = argv[4];
+            std::string result_layer_name = argv[6];
             if (argc == 9 && std::string(argv[7]) == "-o") {
                 target_file = argv[8];
+                target_converter.loadJson(target_file);
             }
-            
-            if (command == "unite") {
-                if (processor.uniteLayers(layer1, layer2, result_layer, source_file, target_file) != 0) return -1;
-            } else if (command == "intersect") {
-                if (processor.intersectLayers(layer1, layer2, result_layer, source_file, target_file) != 0) return -1;
-            } else if (command == "subtract") {
-                if (processor.subtractLayers(layer1, layer2, result_layer, source_file, target_file) != 0) return -1;
+            OperationType op_type = getOperationTypeByComand(command);
+            if (target_file == source_file) {
+                if (processor.doOperationWithLayers(first_layer_name, second_layer_name, result_layer_name, source_layer_pack, op_type) != 0) {
+                    throw std::runtime_error("Ошибка в операции " + getOperationName(op_type) + " при работе с файлом " + source_file);
+                }
+                std::cout << "Размер layer pack после операции = " << source_layer_pack.size() << "\n";
+                source_converter.saveToJson(source_file);
+            }
+            else {
+                if (processor.doOperationWithLayers(first_layer_name, second_layer_name, result_layer_name, source_layer_pack, target_converter.getLayerPack(), op_type) != 0) {
+                    throw std::runtime_error("Ошибка в операции " + getOperationName(op_type) + " при работе с файлом " + source_file + " и с результирующим файлом " + target_file);
+                }
+                target_converter.saveToJson(target_file);
             }
         } else if (command == "expand" || command == "shrink") {
             if (argc < 8 || std::string(argv[5]) != "to") {
@@ -72,17 +97,38 @@ int main(int argc, char *argv[]) {
                 return -1;
             }
 
-            std::string layer1 = argv[2];
+            std::string first_layer_name = argv[2];
             float size = std::stof(argv[4]);
-            std::string result_layer = argv[6];
+            std::string result_layer_name = argv[6];
             if (argc == 9 && std::string(argv[7]) == "-o") {
                 target_file = argv[8];
             }
-
             if (command == "expand") {
-                if (processor.expandLayer(layer1, result_layer, size, source_file, target_file) != 0) return -1;
+                if (source_file == target_file) {
+                    if (processor.expandLayer(first_layer_name, result_layer_name, size, source_layer_pack) != 0) {
+                        throw std::runtime_error("Ошибка в операции расширения при работе с файлом " + source_file);
+                    }
+                    source_converter.saveToJson(source_file);
+                }
+                else {
+                    if (processor.expandLayer(first_layer_name, result_layer_name, size, source_layer_pack, target_converter.getLayerPack()) != 0) {
+                        throw std::runtime_error("Ошибка в операции расширения при работе с файлом " + source_file + " и с результирующим файлом " + target_file);
+                    }
+                    target_converter.saveToJson(target_file);
+                }
             } else if (command == "shrink") {
-                if (processor.shrinkLayer(layer1, result_layer, size, source_file, target_file) != 0) return -1;
+                if (source_file == target_file) {
+                    if (processor.shrinkLayer(first_layer_name, result_layer_name, size, source_layer_pack) != 0) {
+                        throw std::runtime_error("Ошибка в операции сужения при работе с файлом " + source_file);
+                    }
+                    source_converter.saveToJson(source_file);
+                }
+                else {
+                    if (processor.shrinkLayer(first_layer_name, result_layer_name, size, source_layer_pack, target_converter.getLayerPack()) != 0) {
+                        throw std::runtime_error("Ошибка в операции сужения при работе с файлом " + source_file + " и с результирующим файлом " + target_file);
+                    }
+                    target_converter.saveToJson(target_file);
+                }
             }
         } else if (command == "del_layer") {
             if (argc != 4) {
@@ -91,7 +137,10 @@ int main(int argc, char *argv[]) {
             }
 
             std::string layer_name = argv[2];
-            if (processor.delLayer(layer_name, source_file) != 0) return -1;
+            if (processor.delLayer(layer_name, source_layer_pack) != 0) {
+                throw std::runtime_error("Ошибка в операции удаления слоя при работе с файлом " + source_file);
+            }
+            source_converter.saveToJson(source_file);
         } else if (command == "rename_layer") {
             if (argc != 5) {
                 printUsage();
@@ -100,20 +149,32 @@ int main(int argc, char *argv[]) {
 
             std::string old_layer_name = argv[2];
             std::string new_layer_name = argv[4];
-            if (processor.renameLayer(old_layer_name, new_layer_name, source_file) != 0) return -1;
+            if (processor.renameLayer(old_layer_name, new_layer_name, source_layer_pack) != 0) {
+                throw std::runtime_error("Ошибка в операции переименования слоя при работе с файлом " + source_file);
+            }
+            source_converter.saveToJson(source_file);
         } else if (command == "copy_layer") {
             if (argc < 7 || std::string(argv[5]) != "to") {
                 printUsage();
                 return -1;
             }
-
-            std::string layer1 = argv[2];
-            std::string layer2 = argv[6];
+            std::string first_layer_name = argv[2];
+            std::string second_layer_name = argv[6];
             if (argc == 9 && std::string(argv[7]) == "-o") {
                 target_file = argv[8];
             }
-
-            if (processor.copyLayer(layer1, layer2, source_file, target_file) != 0) return -1;
+            if (target_file == source_file) {
+                if (processor.copyLayer(first_layer_name, second_layer_name, source_layer_pack) != 0) {
+                    throw std::runtime_error("Ошибка в операции копирования слоя при работе с файлом " + source_file);
+                }
+                source_converter.saveToJson(source_file);
+            }
+            else {
+                if (processor.copyLayer(first_layer_name, second_layer_name, source_layer_pack, target_converter.getLayerPack()) != 0) {
+                    throw std::runtime_error("Ошибка в операции копирования слоя при работе с файлом " + source_file + " и с результирующим файлом " + target_file);
+                }
+                target_converter.saveToJson(target_file);
+            }
         } else if (command == "have_figure") {
             if (argc != 4) {
                 printUsage();
@@ -121,17 +182,19 @@ int main(int argc, char *argv[]) {
             }
 
             std::string layer_name = argv[2];
-            int result = processor.layerHaveFigure(layer_name, source_file);
-            
-            if (result == -1) return -1;
-
-            return result ? 1 : 0;
+            int result = processor.layerHaveFigure(layer_name, source_layer_pack);
+            if (result == -1) {
+                throw std::runtime_error("Ошибка в операции проверки наличия фигур при работе с фалом " + source_file);
+            }
+            int ans = result ? 1 : 0;
+            std::cout << ans;
+            return ans;
         } else {
             printUsage();
             return -1;
         }
     } catch (const std::exception &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << "Ошибка при выполнении main: " << e.what() << std::endl;
         return -1;
     }
 
