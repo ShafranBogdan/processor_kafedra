@@ -36,10 +36,10 @@ int Processor::doOperationWithLayers(const std::string& first_layer_name, const 
 
         std::vector<Polygon> result_polygons = PolygonOperations::processPolygons(polygons1, polygons2, type);
         for (auto& polygon : result_polygons) {
-            std::cout << "Polygon:" << "\n";
-            for (auto point : polygon.get_points()) {
-                std:: cout << point.x << " " << point.y << "\n";
-            }
+            // std::cout << "Polygon:" << "\n";
+            // for (auto point : polygon.get_points()) {
+            //     std:: cout << point.x << " " << point.y << "\n";
+            // }
         }
         Layer result_layer(result_layer_name, result_polygons);
         layer_pack.append_layer(result_layer);
@@ -53,6 +53,9 @@ int Processor::doOperationWithLayers(const std::string& first_layer_name, const 
 int Processor::doOperationWithLayers(const std::string& first_layer_name, const std::string& second_layer_name,
                            const std::string& result_layer_name, LayerPack& source_layer_pack, LayerPack& target_layer_pack, OperationType type) {
     try {
+        if (getOperationName(type) == "OTHER") {
+            throw std::invalid_argument("Неподходящий тип операции для метода doOperationWithLayers");
+        }
         if (!checkName(result_layer_name, target_layer_pack.get_layers_names())) {
             throw std::invalid_argument("Имя результирующего слоя " + result_layer_name + " уже существует в файле топологии.");
         }
@@ -131,29 +134,29 @@ int Processor::shrinkLayer(const std::string& layer_name, const std::string& res
     return expandLayer(layer_name, result_layer_name, -size, layer_pack);
 }
 
-int Processor::delLayer(const std::string& layer_name, LayerPack& layer_pack) {
-    try {
-        LayerOperations::delLayerInLayerPack(layer_name, layer_pack);
-        return 0;
-    } catch (const std::exception &e) {
-        std::cerr << "Ошибка в операции удаления слоя с именем -- " << layer_name << ": " << e.what() << std::endl;
-        return -1;
-    }
-}
+// int Processor::delLayer(const std::string& layer_name, LayerPack& layer_pack) {
+//     try {
+//         LayerOperations::delLayerInLayerPack(layer_name, layer_pack);
+//         return 0;
+//     } catch (const std::exception &e) {
+//         std::cerr << "Ошибка в операции удаления слоя с именем -- " << layer_name << ": " << e.what() << std::endl;
+//         return -1;
+//     }
+// }
 
-int Processor::renameLayer(const std::string& old_layer_name, const std::string& new_layer_name, LayerPack& layer_pack) {
-    try {
-        if (!checkName(new_layer_name, layer_pack.get_layers_names())) {
-            throw std::invalid_argument("Имя результирующего слоя " + new_layer_name + " уже существует в файле топологии.");
-        }
-        LayerOperations::renameLayerInLayerPack(old_layer_name, new_layer_name, layer_pack);
+// int Processor::renameLayer(const std::string& old_layer_name, const std::string& new_layer_name, LayerPack& layer_pack) {
+//     try {
+//         if (!checkName(new_layer_name, layer_pack.get_layers_names())) {
+//             throw std::invalid_argument("Имя результирующего слоя " + new_layer_name + " уже существует в файле топологии.");
+//         }
+//         LayerOperations::renameLayerInLayerPack(old_layer_name, new_layer_name, layer_pack);
 
-        return 0;
-    } catch (const std::exception &e) {
-        std::cerr << "Ошибка в операции переименования слоя с старым и новым именем соответсвенно -  " << old_layer_name << " и" << new_layer_name << ": " << e.what() << std::endl;
-        return -1;
-    }
-}
+//         return 0;
+//     } catch (const std::exception &e) {
+//         std::cerr << "Ошибка в операции переименования слоя с старым и новым именем соответсвенно -  " << old_layer_name << " и" << new_layer_name << ": " << e.what() << std::endl;
+//         return -1;
+//     }
+// }
 
 int Processor::copyLayer(const std::string& layer_name, const std::string& copy_layer_name, LayerPack& layer_pack) {
     try {
@@ -167,6 +170,7 @@ int Processor::copyLayer(const std::string& layer_name, const std::string& copy_
         return -1;
     }
 }
+
 int Processor::copyLayer(const std::string& layer_name, const std::string& copy_layer_name,
                         LayerPack& source_layer_pack, LayerPack& target_layer_pack) {
     try {
