@@ -47,6 +47,14 @@ void printUsage() {
               << "              Returns 0 if figures are found, 1 otherwise.\n";
 }
 
+void chekcLayerPack(LayerPack& layer_pack, std::string& file_name) {
+    for (Layer& layer : layer_pack.get_layers()) {
+        if (!LayerOperations::checkLayer(layer)) {
+            throw std::invalid_argument("Ошибка в задании полигонов в слое: " + layer.get_name() + " для файла " + file_name + ".");
+        }
+    }
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 4) {
         printUsage();
@@ -59,7 +67,7 @@ int main(int argc, char *argv[]) {
     std::string source_file = argv[1];
     source_converter.loadJson(source_file);
     LayerPack& source_layer_pack = source_converter.getLayerPack();
-
+    chekcLayerPack(source_layer_pack, source_file);
     std::string command = argv[3];
     std::string target_file = source_file;  // default target is source file
 
@@ -76,6 +84,7 @@ int main(int argc, char *argv[]) {
             if (argc == 9 && std::string(argv[7]) == "-o") {
                 target_file = argv[8];
                 target_converter.loadJson(target_file);
+                chekcLayerPack(target_converter.getLayerPack(), target_file);
             }
             OperationType op_type = getOperationTypeByComand(command);
             if (target_file == source_file) {
@@ -130,28 +139,28 @@ int main(int argc, char *argv[]) {
                 }
             }
         } else if (command == "del_layer") {
-            // if (argc != 4) {
-            //     printUsage();
-            //     return -1;
-            // }
+            if (argc != 4) {
+                printUsage();
+                return -1;
+            }
 
-            // std::string layer_name = argv[2];
-            // if (processor.delLayer(layer_name, source_layer_pack) != 0) {
-            //     throw std::runtime_error("Ошибка в операции удаления слоя при работе с файлом " + source_file);
-            // }
-            // source_converter.saveToJson(source_file);
+            std::string layer_name = argv[2];
+            if (processor.delLayer(layer_name, source_layer_pack) != 0) {
+                throw std::runtime_error("Ошибка в операции удаления слоя при работе с файлом " + source_file);
+            }
+            source_converter.saveToJson(source_file);
         } else if (command == "rename_layer") {
-            // if (argc != 5) {
-            //     printUsage();
-            //     return -1;
-            // }
+            if (argc != 5) {
+                printUsage();
+                return -1;
+            }
 
-            // std::string old_layer_name = argv[2];
-            // std::string new_layer_name = argv[4];
-            // if (processor.renameLayer(old_layer_name, new_layer_name, source_layer_pack) != 0) {
-            //     throw std::runtime_error("Ошибка в операции переименования слоя при работе с файлом " + source_file);
-            // }
-            // source_converter.saveToJson(source_file);
+            std::string old_layer_name = argv[2];
+            std::string new_layer_name = argv[4];
+            if (processor.renameLayer(old_layer_name, new_layer_name, source_layer_pack) != 0) {
+                throw std::runtime_error("Ошибка в операции переименования слоя при работе с файлом " + source_file);
+            }
+            source_converter.saveToJson(source_file);
         } else if (command == "copy_layer") {
             if (argc != 6 && argc != 8 || std::string(argv[4]) != "to") {
                 printUsage();

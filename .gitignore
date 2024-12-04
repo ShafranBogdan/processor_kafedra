@@ -16,3 +16,10 @@
 /include
 /.vscode
 /.DS_Store
+/test_processor_unix.cpp
+/TestOshmetkov.cpp
+/LayerOperations_old.cpp
+/LayerOperations_old.h
+/RemizovModuleTests.cpp
+/trap_test
+/test_oshmet

@@ -25,6 +25,12 @@ int Processor::doOperationWithLayers(const std::string& first_layer_name, const 
         if (getOperationName(type) == "OTHER") {
             throw std::invalid_argument("Неподходящий тип операции для метода doOperationWithLayers");
         }
+        if (checkName(first_layer_name, layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + first_layer_name + " не существует в файле топологии.");
+        }
+        if (checkName(second_layer_name, layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + first_layer_name + " не существует в файле топологии.");
+        }
         if (!checkName(result_layer_name, layer_pack.get_layers_names())) {
             throw std::invalid_argument("Имя результирующего слоя " + result_layer_name + " уже существует в файле топологии.");
         }
@@ -56,6 +62,12 @@ int Processor::doOperationWithLayers(const std::string& first_layer_name, const 
         if (getOperationName(type) == "OTHER") {
             throw std::invalid_argument("Неподходящий тип операции для метода doOperationWithLayers");
         }
+        if (checkName(first_layer_name, source_layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + first_layer_name + " не существует в файле топологии.");
+        }
+        if (checkName(second_layer_name, source_layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + first_layer_name + " не существует в файле топологии.");
+        }
         if (!checkName(result_layer_name, target_layer_pack.get_layers_names())) {
             throw std::invalid_argument("Имя результирующего слоя " + result_layer_name + " уже существует в файле топологии.");
         }
@@ -79,6 +91,9 @@ int Processor::doOperationWithLayers(const std::string& first_layer_name, const 
 int Processor::expandLayer(const std::string& layer_name, const std::string& result_layer_name, float size,
                            LayerPack& layer_pack) {
     try {
+        if (checkName(layer_name, layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + layer_name + " не существует в файле топологии.");
+        }
         if (!checkName(result_layer_name, layer_pack.get_layers_names())) {
             throw std::invalid_argument("Имя результирующего слоя " + result_layer_name + " уже существует в файле топологии.");
         }
@@ -105,6 +120,9 @@ int Processor::expandLayer(const std::string& layer_name, const std::string& res
 int Processor::expandLayer(const std::string& layer_name, const std::string& result_layer_name, float size,
                            LayerPack& source_layer_pack, LayerPack& target_layer_pack) {
     try {
+        if (checkName(layer_name, source_layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + layer_name + " не существует в файле топологии.");
+        }
         if (!checkName(result_layer_name, target_layer_pack.get_layers_names())) {
             throw std::invalid_argument("Имя результирующего слоя " + result_layer_name + " уже существует в файле топологии.");
         }
@@ -134,32 +152,41 @@ int Processor::shrinkLayer(const std::string& layer_name, const std::string& res
     return expandLayer(layer_name, result_layer_name, -size, layer_pack);
 }
 
-// int Processor::delLayer(const std::string& layer_name, LayerPack& layer_pack) {
-//     try {
-//         LayerOperations::delLayerInLayerPack(layer_name, layer_pack);
-//         return 0;
-//     } catch (const std::exception &e) {
-//         std::cerr << "Ошибка в операции удаления слоя с именем -- " << layer_name << ": " << e.what() << std::endl;
-//         return -1;
-//     }
-// }
+int Processor::delLayer(const std::string& layer_name, LayerPack& layer_pack) {
+    try {
+        if (checkName(layer_name, layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + layer_name + " не существует в файле топологии.");
+        }
+        LayerOperations::delLayerInLayerPack(layer_name, layer_pack);
+        return 0;
+    } catch (const std::exception &e) {
+        std::cerr << "Ошибка в операции удаления слоя с именем -- " << layer_name << ": " << e.what() << std::endl;
+        return -1;
+    }
+}
 
-// int Processor::renameLayer(const std::string& old_layer_name, const std::string& new_layer_name, LayerPack& layer_pack) {
-//     try {
-//         if (!checkName(new_layer_name, layer_pack.get_layers_names())) {
-//             throw std::invalid_argument("Имя результирующего слоя " + new_layer_name + " уже существует в файле топологии.");
-//         }
-//         LayerOperations::renameLayerInLayerPack(old_layer_name, new_layer_name, layer_pack);
+int Processor::renameLayer(const std::string& old_layer_name, const std::string& new_layer_name, LayerPack& layer_pack) {
+    try {
+        if (checkName(old_layer_name, layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + old_layer_name + " не существует в файле топологии.");
+        }
+        if (!checkName(new_layer_name, layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя результирующего слоя " + new_layer_name + " уже существует в файле топологии.");
+        }
+        LayerOperations::renameLayerInLayerPack(old_layer_name, new_layer_name, layer_pack);
 
-//         return 0;
-//     } catch (const std::exception &e) {
-//         std::cerr << "Ошибка в операции переименования слоя с старым и новым именем соответсвенно -  " << old_layer_name << " и" << new_layer_name << ": " << e.what() << std::endl;
-//         return -1;
-//     }
-// }
+        return 0;
+    } catch (const std::exception &e) {
+        std::cerr << "Ошибка в операции переименования слоя с старым и новым именем соответсвенно -  " << old_layer_name << " и" << new_layer_name << ": " << e.what() << std::endl;
+        return -1;
+    }
+}
 
 int Processor::copyLayer(const std::string& layer_name, const std::string& copy_layer_name, LayerPack& layer_pack) {
     try {
+        if (checkName(layer_name, layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + layer_name + " не существует в файле топологии.");
+        }
         if (!checkName(copy_layer_name, layer_pack.get_layers_names())) {
             throw std::invalid_argument("Имя результирующего слоя " + copy_layer_name + " уже существует в файле топологии.");
         }
@@ -174,10 +201,13 @@ int Processor::copyLayer(const std::string& layer_name, const std::string& copy_
 int Processor::copyLayer(const std::string& layer_name, const std::string& copy_layer_name,
                         LayerPack& source_layer_pack, LayerPack& target_layer_pack) {
     try {
+        if (checkName(layer_name, source_layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + layer_name + " не существует в файле топологии.");
+        }
         if (!checkName(copy_layer_name, target_layer_pack.get_layers_names())) {
             throw std::invalid_argument("Имя результирующего слоя " + copy_layer_name + " уже существует в файле топологии.");
         }
-        LayerOperations::copyLayerFromLayerPack(source_layer_pack, layer_name, copy_layer_name);
+        LayerOperations::copyLayerFromLayerPack(source_layer_pack, target_layer_pack, layer_name, copy_layer_name);
         return 0;
     } catch (const std::exception &e) {
         std::cerr << "Ошибка в операции копирования слоя с именами слоев - " << layer_name << " и " << copy_layer_name << ": " << e.what() << std::endl;
@@ -188,7 +218,9 @@ int Processor::copyLayer(const std::string& layer_name, const std::string& copy_
 int Processor::layerHaveFigure(const std::string& layer_name, LayerPack& layer_pack) {
     try {
         Layer& layer = layer_pack[layer_name];
-
+        if (checkName(layer_name, layer_pack.get_layers_names())) {
+            throw std::invalid_argument("Имя слоя " + layer_name + " не существует в файле топологии.");
+        }
         if (LayerOperations::layerIsEmpty(layer)) {
             return 1;
         } else {
